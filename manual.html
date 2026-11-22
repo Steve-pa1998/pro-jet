@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pro Jet — Manual de Referencia</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #222; line-height: 1.6; }
+h1 { color: #1a1a2e; border-bottom: 3px solid #e94560; padding-bottom: 10px; }
+h2 { color: #16213e; margin-top: 40px; border-left: 4px solid #e94560; padding-left: 12px; }
+h3 { color: #0f3460; margin-top: 25px; }
+table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: left; }
+td { border: 1px solid #ddd; padding: 8px 12px; }
+tr:nth-child(even) { background: #f5f5f5; }
+.code { background: #1a1a2e; color: #a8e6cf; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+.box { background: #f0f4ff; border: 1px solid #b8c9e8; border-radius: 6px; padding: 15px; margin: 15px 0; }
+.warn { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 15px; margin: 15px 0; }
+.ok { background: #d4edda; border: 1px solid #28a745; border-radius: 6px; padding: 15px; margin: 15px 0; }
+.tag { display: inline-block; background: #e94560; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-right: 4px; }
+.tag-blue { background: #0f3460; }
+.tag-green { background: #28a745; }
+.tag-gray { background: #6c757d; }
+.toc { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin: 20px 0; }
+.toc a { text-decoration: none; color: #0f3460; display: block; padding: 3px 0; }
+.toc a:hover { color: #e94560; }
+@media print { .toc { page-break-after: always; } }
+</style>
+</head>
+<body>
+
+<h1>🚀 Pro Jet — Manual de Referencia</h1>
+<p><strong>Steve</strong> | CDMX | 21/nov/2026</p>
+<p>Todo lo que necesitas saber de tu sistema en un solo documento.</p>
+
+<div class="toc">
+<strong>Índice</strong>
+<a href="#mapa">1. Mapa del sistema</a>
+<a href="#nombres">2. Nombres de agentes</a>
+<a href="#capas">3. Las 3 capas (framework)</a>
+<a href="#tools">4. Diccionario de herramientas</a>
+<a href="#subprocs">5. Subprocesos A-G</a>
+<a href="#combos">6. Combinaciones de 2</a>
+<a href="#scraper">7. Template de scraper</a>
+<a href="#que-es">8. ¿Qué es qué? (framework vs tool vs prompt)</a>
+<a href="#rutas">9. Rutas / caminos</a>
+<a href="#config">10. Config y estructura de archivos</a>
+<a href="#groq">11. Groq (tu GPU en la nube)</a>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="mapa">1. Mapa del sistema</h2>
+
+<div class="code">
+┌─────────────────────────────────────────────────────────────┐
+│                    TÚ (Steve)                                │
+│         hablas / escribes en la terminal                     │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│  asiste.py  (siempre encendido)                              │
+│  ESCUCHAR → GROQ piensa → ¿tool? → ACTÚA → HABLA            │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+          ┌──────────────────┼──────────────────┐
+          ▼                  ▼                  ▼
+   [TOOLS LOCALES]    [TOOLS NUBE]       [MEMORIA]
+   navegador,         Groq,              ChromaDB,
+   pantalla,          DuckDuckGo         guardar/buscar
+   archivos, voz
+</div>
+
+<div class="code">
+┌─────────────────────────────────────────────────────────────┐
+│              FLUJO DE ÓRDENES (cada 4h)                      │
+│                                                             │
+│  cere.py ──▶ orders.jsonl ──▶ cordi.py ──▶ agentes/        │
+│  (piensa)    (órdenes)       (rutea)     (ejecutan)        │
+└─────────────────────────────────────────────────────────────┘
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="nombres">2. Nombres de agentes</h2>
+
+<table>
+<tr><th>Nombre</th><th>Archivo</th><th>Qué hace</th><th>Motor</th><th>Corre</th></tr>
+<tr><td><strong>asiste</strong></td><td>asiste.py</td><td>Habla con Steve (voz, pantalla, navegador)</td><td>Groq</td><td>Loop persistente</td></tr>
+<tr><td><strong>codi</strong></td><td>agents/codi.py</td><td>Escribe código</td><td>Groq</td><td>On-demand</td></tr>
+<tr><td><strong>cere</strong></td><td>cere.py</td><td>Piensa qué hacer, emite órdenes</td><td>Groq</td><td>Cada 4h</td></tr>
+<tr><td><strong>cordi</strong></td><td>cordi.py</td><td>Rutea órdenes a agentes (NO es LLM)</td><td>—</td><td>Cada 4h (después de cere)</td></tr>
+<tr><td>email</td><td>agents/email.py</td><td>Maneja Gmail</td><td>Groq</td><td>On-demand (futuro)</td></tr>
+<tr><td>freelance</td><td>agents/freelance.py</td><td>Postula a jales</td><td>Groq</td><td>On-demand (futuro)</td></tr>
+<tr><td>produccion</td><td>agents/produccion.py</td><td>Procesa audio/video</td><td>Groq</td><td>On-demand (futuro)</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="capas">3. Las 3 capas (framework)</h2>
+
+<table>
+<tr><th>Capa</th><th>Quién</th><th>Qué hace</th><th>Qué NO hace</th></tr>
+<tr><td><span class="tag">1</span> Cerebro</td><td>cere.py</td><td>Piensa. Decide. Planifica.</td><td>No ejecuta. No toca archivos.</td></tr>
+<tr><td><span class="tag tag-blue">2</span> Coordinador</td><td>cordi.py</td><td>Recibe órdenes. Rutea. Registra.</td><td>No piensa. No inventa tareas.</td></tr>
+<tr><td><span class="tag tag-green">3</span> Agentes</td><td>agents/*.py</td><td>Ejecutan UNA cosa. 3-5 tools.</td><td>No se hablan entre sí.</td></tr>
+</table>
+
+<div class="box">
+<strong>Regla de oro:</strong> El cerebro decide <em>qué</em>. El coordinador decide <em>quién</em>. El agente decide <em>cómo</em>.
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="tools">4. Diccionario de herramientas</h2>
+
+<h3>Nivel 0 — Instrucciones de máquina (no necesitan LLM)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Programa/Lib</th><th>Quién la usa</th></tr>
+<tr><td>leer_archivo</td><td>Lee un archivo, devuelve texto</td><td>Python (pathlib)</td><td>Todos</td></tr>
+<tr><td>escribir_archivo</td><td>Crea o sobrescribe un archivo</td><td>Python (pathlib)</td><td>Todos</td></tr>
+<tr><td>listar_carpeta</td><td>Devuelve archivos en una carpeta</td><td>Python (os)</td><td>Asiste, cordi</td></tr>
+<tr><td>buscar_en_archivo</td><td>Busca texto dentro de un archivo (grep)</td><td>Python (re)</td><td>Asiste, codi</td></tr>
+<tr><td>obtener_hora</td><td>Fecha y hora actual</td><td>Python (datetime)</td><td>Todos</td></tr>
+<tr><td>obtener_sistema</td><td>RAM, CPU, disco</td><td>Python (psutil)</td><td>Daemon</td></tr>
+</table>
+
+<h3>Nivel 1 — Sistema (interactúa con el mundo local)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Programa/Lib</th><th>Quién la usa</th></tr>
+<tr><td>ejecutar_comando</td><td>Lanza comando (ffmpeg, git, pip)</td><td>Python (subprocess)</td><td>Codi, produccion</td></tr>
+<tr><td>http</td><td>Llama a una API (GET, POST)</td><td>Python (requests)</td><td>Freelance, email</td></tr>
+<tr><td>enviar_email</td><td>Manda un email</td><td>Python (smtplib)</td><td>Email</td></tr>
+<tr><td>git</td><td>Commit, push, pull, branch</td><td>Git (subprocess)</td><td>Codi, freelance</td></tr>
+<tr><td>descargar</td><td>URL → archivo en disco</td><td>Python (requests)</td><td>Asiste, produccion</td></tr>
+</table>
+
+<h3>Nivel 2 — Conocimiento (buscar y recordar)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Programa/Lib</th><th>Quién la usa</th></tr>
+<tr><td>buscar_web</td><td>Busca en internet</td><td>DuckDuckGo (ddgs)</td><td>Asiste, codi</td></tr>
+<tr><td>leer_pagina</td><td>Extrae texto de una URL</td><td>Python (requests + bs4)</td><td>Asiste, freelance</td></tr>
+<tr><td>buscar_memoria</td><td>Busca en Chroma (RAG)</td><td>ChromaDB + Ollama (nomic)</td><td>Asiste, cere</td></tr>
+<tr><td>guardar_memoria</td><td>Guarda en Chroma</td><td>ChromaDB + Ollama (nomic)</td><td>Asiste, todos</td></tr>
+<tr><td>sql</td><td>Consulta a SQLite</td><td>Python (sqlite3)</td><td>Email, leads</td></tr>
+</table>
+
+<h3>Nivel 3 — Acción visible (Steve lo ve)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Programa/Lib</th><th>Quién la usa</th></tr>
+<tr><td>navegador</td><td>Abre, clickea, escribe en navegador</td><td>Playwright (Chromium)</td><td>Asiste, freelance</td></tr>
+<tr><td>capturar_pantalla</td><td>Screenshot del escritorio</td><td>mss</td><td>Asiste</td></tr>
+<tr><td>grabar_audio</td><td>Graba 30s de audio</td><td>Python (sounddevice)</td><td>Produccion, vocal</td></tr>
+<tr><td>procesar_audio</td><td>Corta, mezcla, autotune</td><td>ffmpeg</td><td>Produccion</td></tr>
+<tr><td>procesar_video</td><td>Corta, une, añade texto</td><td>ffmpeg</td><td>Produccion, clips</td></tr>
+<tr><td>generar_imagen</td><td>Genera imagen con IA</td><td>API (DALL-E, etc.)</td><td>Asiste, marca</td></tr>
+</table>
+
+<h3>Nivel 4 — Comunicación (habla con Steve o el mundo)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Programa/Lib</th><th>Quién la usa</th></tr>
+<tr><td>hablar</td><td>Texto → voz (altavoz)</td><td>pyttsx3</td><td>Asiste</td></tr>
+<tr><td>escuchar</td><td>Voz → texto (micrófono)</td><td>SpeechRecognition + PyAudio</td><td>Asiste</td></tr>
+<tr><td>notificar</td><td>Notificación del sistema</td><td>Python (win10toast)</td><td>Todos</td></tr>
+<tr><td>postear_red</td><td>Publica en red social</td><td>API de la red</td><td>Marketing</td></tr>
+</table>
+
+<h3>Nivel 5 — Orquestación (entre agentes)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Quién la hace</th></tr>
+<tr><td>publicar_orden</td><td>Escribe orden en orders.jsonl</td><td>Cere</td></tr>
+<tr><td>leer_ordenes</td><td>Lee órdenes pendientes</td><td>Cordi</td></tr>
+<tr><td>marcar_done</td><td>Marca orden como completada</td><td>Cordi</td></tr>
+<tr><td>publicar_estado</td><td>Agente reporta qué hizo</td><td>Todos los agentes</td></tr>
+<tr><td>delegar</td><td>Coordi manda sub-tarea a otro agente</td><td>Cordi</td></tr>
+</table>
+
+<h3>Nivel 6 — Mantenimiento (el sistema se cuida)</h3>
+<table>
+<tr><th>Tool</th><th>Qué hace</th><th>Quién la hace</th></tr>
+<tr><td>limpiar_logs</td><td>Borra logs >30 días</td><td>Daemon</td></tr>
+<tr><td>compactar_bus</td><td>Borra completados >7 días</td><td>Daemon</td></tr>
+<tr><td>verificar_agentes</td><td>Confirma que existen los scripts</td><td>Daemon</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="subprocs">5. Subprocesos A-G (resumen)</h2>
+
+<table>
+<tr><th>Letra</th><th>Nombre</th><th>Cantidad de tools</th><th>Ejemplo</th></tr>
+<tr><td>A</td><td>Sistema</td><td>10</td><td>leer_archivo, escribir_archivo, obtener_hora</td></tr>
+<tr><td>B</td><td>Ejecución</td><td>10</td><td>ejecutar_comando, http, git, descargar</td></tr>
+<tr><td>C</td><td>Conocimiento</td><td>8</td><td>buscar_web, buscar_memoria, sql</td></tr>
+<tr><td>D</td><td>Acción visible</td><td>11</td><td>navegador, capturar_pantalla, procesar_video</td></tr>
+<tr><td>E</td><td>Comunicación</td><td>10</td><td>hablar, escuchar, enviar_email, postear_red</td></tr>
+<tr><td>F</td><td>Orquestación</td><td>8</td><td>publicar_orden, marcar_done, delegar</td></tr>
+<tr><td>G</td><td>Mantenimiento</td><td>3+</td><td>limpiar_logs, compactar_bus</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="combos">6. Combinaciones de 2 (pares que se complementan)</h2>
+
+<table>
+<tr><th>Par</th><th>Se complementan en</th><th>Qué desbloquean</th></tr>
+<tr><td><strong>Asiste + Codi</strong></td><td>Uno pide, otro construye</td><td>Crear nuevos agentes sin escribir código</td></tr>
+<tr><td>Codi + Freelance</td><td>Uno escribe, otro postula</td><td>Generar deliverable + enviar propuesta</td></tr>
+<tr><td>Freelance + Email</td><td>Uno postula, otro responde</td><td>Ciclo completo: postular → responder → entregar</td></tr>
+<tr><td>Asiste + Producción</td><td>Uno pide, otro procesa</td><td>"Graba 30s y ponle autotune"</td></tr>
+<tr><td>Email + Codi</td><td>Uno detecta jale, otro programa</td><td>Jale → se lee → se programa → se entrega</td></tr>
+<tr><td>Asiste + RAG</td><td>Uno pregunta, otro recuerda</td><td>"¿Qué decidimos la semana pasada?"</td></tr>
+<tr><td>Codi + Producción</td><td>Uno escribe script, otro lo ejecuta</td><td>"Hazme un video con este audio"</td></tr>
+<tr><td>Freelance + Producción</td><td>Uno gana jale, otro hace el video</td><td>Postular a jales de edición y entregar</td></tr>
+</table>
+
+<div class="box">
+<strong>Orden de construcción:</strong>
+<br>1. Asiste + Codi (bootstrap) → 2. Email → 3. Freelance → 4. Producción
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="scraper">7. Template de scraper</h2>
+
+<h3>Los campos y qué significan</h3>
+<table>
+<tr><th>Campo</th><th>Qué es</th><th>Ejemplo</th></tr>
+<tr><td><code>lenguaje</code></td><td>En qué lenguaje se escribe</td><td>Python</td></tr>
+<tr><td><code>parser</code></td><td>Cómo lee la página</td><td>BeautifulSoup (HTML estático) / Playwright (JS)</td></tr>
+<tr><td><code>método</code></td><td>Solo leer o también enviar</td><td>GET (solo mira) / POST (envía datos)</td></tr>
+<tr><td><code>dominio</code></td><td>De qué URL saca datos</td><td>https://ejemplo.com/directorio</td></tr>
+<tr><td><code>extraiga</code></td><td>Qué campos de TU base de datos buscar</td><td>nombre, telefono, ciudad</td></tr>
+<tr><td><code>timeout</code></td><td>Si la página no responde en X seg, pasa a la siguiente</td><td>10s</td></tr>
+<tr><td><code>sleep</code></td><td>Espera entre requests (para no detectarte)</td><td>2s</td></tr>
+<tr><td><code>salida</code></td><td>En qué formato guarda</td><td>CSV / JSON / SQLite</td></tr>
+<tr><td><code>límite</code></td><td>Máximo de páginas o registros</td><td>200 páginas</td></tr>
+<tr><td><code>user_agent</code></td><td>Qué "navegador" dice que es</td><td>"Mozilla/5.0 (Windows NT 10.0...)"</td></tr>
+<tr><td><code>whitelist</code></td><td>Solo estos dominios</td><td>ejemplo.com</td></tr>
+<tr><td><code>blacklist</code></td><td>Nunca navegar a</td><td>*.exe, *.bat, *.sh</td></tr>
+</table>
+
+<h3>¿Qué es cada cosa?</h3>
+<table>
+<tr><th>Término</th><th>Explicación simple</th></tr>
+<tr><td><strong>BeautifulSoup</strong></td><td>Un parser. Lee el HTML y te deja buscar elementos. Como Ctrl+F pero estructurado. "Dame todos los &lt;span class='phone'&gt;"</td></tr>
+<tr><td><strong>Playwright</strong></td><td>Abre un navegador REAL (Chromium). Espera que cargue todo. Para páginas que necesitan JavaScript (React, Facebook, Google Maps).</td></tr>
+<tr><td><strong>Solo GET</strong></td><td>"Solo mira, no toques nada." No envía formularios, no hace login, no borra. Es como abrir una pestaña.</td></tr>
+<tr><td><strong>Timeout 10s</strong></td><td>Si la página no responde en 10 segundos, deja de esperar y pasa a la siguiente. Para que tu script no se quede colgado.</td></tr>
+<tr><td><strong>Sleep 2s</strong></td><td>Después de cada petición, espera 2 segundos. Para que no te detecten como bot. Simula un humano navegando lento.</td></tr>
+<tr><td><strong>extraiga []</strong></td><td>Los campos de TU base de datos + dónde están en la página. Tú le dices QUÉ buscar, él busca DÓNDE.</td></tr>
+<tr><td><strong>dominio</strong></td><td>La URL base. De dónde saca los datos. Si es Google Maps → usa API oficial. Si es Facebook → no se puede.</td></tr>
+</table>
+
+<h3>Template lleno (copia y pega a codi)</h3>
+<div class="code"># SPEC — Scraper
+lenguaje: Python
+parser: BeautifulSoup
+método: GET
+dominio: https://directorio-ejemplo.com/negocios
+extraiga:
+  - nombre (h2 con class="biz-name")
+  - telefono (a con href="tel:")
+  - ciudad (span con class="city")
+  - comportamiento (p con class="description")
+timeout: 10s
+sleep: 2s
+salida: CSV
+límite: 200 páginas
+user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+whitelist: directorio-ejemplo.com
+blacklist: *.exe, *.bat, *.sh, *.py</div>
+
+<div class="warn">
+<strong>⚠️ Legal:</strong> Scraping de datos personales (teléfono + nombre + edad) sin consentimiento es ilegal en México (LFPDPPP). Google Maps y Facebook tienen APIs oficiales. Úsalas.
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="que-es">8. ¿Qué es qué?</h2>
+
+<table>
+<tr><th>Término</th><th>Qué es</th><th>Ejemplo</th></tr>
+<tr><td><strong>System prompt</strong></td><td>El "rol" que le das al LLM. Le dice cómo comportarse.</td><td>"Eres un optimizador de código..."</td></tr>
+<tr><td><strong>Tool / Herramienta</strong></td><td>Una función que el LLM puede llamar. Sus "manos".</td><td>leer_archivo, navegador, hablar</td></tr>
+<tr><td><strong>Framework</strong></td><td>Estructura que organiza agentes y su comunicación.</td><td>Tu bus.py + cordi.py. O LangChain.</td></tr>
+<tr><td><strong>Agente</strong></td><td>Un programa que tiene un LLM + tools + un rol.</td><td>asiste.py, codi.py</td></tr>
+<tr><td><strong>Bus</strong></td><td>El "tablero de notas" donde se pegan órdenes y estados.</td><td>bus.jsonl, orders.jsonl</td></tr>
+<tr><td><strong>RAG</strong></td><td>Buscar en documentos guardados por similitud (no por texto exacto).</td><td>ChromaDB + nomic-embed-text</td></tr>
+<tr><td><strong>Embedding</strong></td><td>Traducir texto → números para que se pueda "buscar por parecido".</td><td>nomic-embed-text (Ollama local)</td></tr>
+<tr><td><strong>LLM</strong></td><td>El modelo de lenguaje. El "cerebro" que genera texto.</td><td>Groq (nube), Ollama (local)</td></tr>
+<tr><td><strong>Tool calling</strong></td><td>El LLM decide "necesito llamar a la función X con estos parámetros".</td><td>Groq devuelve {"function": "navegador", "args": {...}}</td></tr>
+<tr><td><strong>Subprocess</strong></td><td>Ejecutar un programa desde otro. "Corre este archivo como si lo corrieras en la terminal".</td><td>cordi.py lanza codi.py</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="rutas">9. Rutas / caminos</h2>
+
+<table>
+<tr><th>Camino</th><th>Flujo</th><th>Archivos involucrados</th></tr>
+<tr><td><strong>1. Tú hablas → te responde</strong></td><td>mic → STT → Groq → TTS → altavoz</td><td>asiste.py (solo)</td></tr>
+<tr><td><strong>2. Buscas algo en la web</strong></td><td>"busca X" → Groq → DuckDuckGo → Groq resume → te habla</td><td>asiste.py (solo)</td></tr>
+<tr><td><strong>3. Abres una página</strong></td><td>"abre YouTube" → Groq → Playwright → te habla</td><td>asiste.py (solo)</td></tr>
+<tr><td><strong>4. Cere manda trabajo</strong></td><td>Task Scheduler → cere (Groq) → orders.jsonl → cordi → subprocess(codi) → resultado</td><td>cere.py, orders.jsonl, cordi.py, agents/codi.py</td></tr>
+<tr><td><strong>5. Recuerdas algo</strong></td><td>"¿qué decidimos?" → Groq → ChromaDB → Groq resume → te habla</td><td>asiste.py (solo)</td></tr>
+<tr><td><strong>6. Pides código</strong></td><td>"hazme un scraper" → asiste → Groq decide → lanza codi → Groq escribe → guarda .py</td><td>asiste.py, agents/codi.py</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="config">10. Config y estructura de archivos</h2>
+
+<div class="code">pro jet/
+├── env/
+│   ├── __init__.py       ← "from env.config import *"
+│   ├── config.py         ← paths, modelo, URL de Groq
+│   └── keys.env          ← GROQ_API_KEY=...
+├── agents/
+│   └── codi.py           ← agente de código
+├── asiste.py             ← asistente personal (loop)
+├── bus.py                ← bus de mensajes (JSONL)
+├── bus.jsonl             ← estados de agentes
+├── orders.jsonl          ← órdenes del cerebro
+└── context/
+    ├── logs/             ← logs de cada agente
+    ├── output/           ← código generado por codi
+    └── screenshots/      ← capturas de pantalla</div>
+
+<h3>Reglas</h3>
+<table>
+<tr><th>Regla</th><th>Por qué</th></tr>
+<tr><td>Todo .py importa de <code>env</code></td><td>Una sola fuente de verdad. Si cambias la key, cambias 1 archivo.</td></tr>
+<tr><td>Bus es append-only (JSONL)</td><td>Nadie reescribe líneas. Solo se agregan. No se corrompe.</td></tr>
+<tr><td>Cordi NO es LLM</td><td>Es un script de 50 líneas. Si le pones LLM, "piensa" cosas que no debe.</td></tr>
+<tr><td>Cere NO ejecuta</td><td>Solo escribe órdenes. Si ejecuta, está haciendo el trabajo de cordi.</td></tr>
+<tr><td>1 agente = 1 archivo = 1 main()</td><td>Sin wrappers, sin importlib, sin registry.</td></tr>
+<tr><td>3-5 tools por agente</td><td>Más de 5 y el modelo se confunde eligiendo.</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="groq">11. Groq (tu GPU en la nube)</h2>
+
+<table>
+<tr><th>Dato</th><th>Valor</th></tr>
+<tr><td>Modelo</td><td>openai/gpt-oss-120b</td></tr>
+<tr><td>URL</td><td>https://api.groq.com/openai/v1/chat/completions</td></tr>
+<tr><td>Costo</td><td>Gratis (free tier)</td></tr>
+<tr><td>Límite</td><td>30 requests/min, 1,000/día</td></tr>
+<tr><td>Velocidad</td><td>~500 tokens/segundo</td></tr>
+<tr><td>Tool calling</td><td>Sí (mismo formato OpenAI)</td></tr>
+<tr><td>Tu key</td><td>env/keys.env (nunca en el código)</td></tr>
+</table>
+
+<div class="box">
+<strong>Por qué Groq y no Ollama:</strong> Tu PC tiene AMD Radeon integrada (2 GB, comparte RAM). No puede correr modelos 7B+ a velocidad usable. Groq corre en la nube, es gratis, y el modelo es 120B (10x más grande que cualquier cosa local).
+</div>
+
+<div class="ok">
+<strong>Ollama local solo para:</strong> nomic-embed-text (274 MB, trivial, para hacer embeddings de ChromaDB).
+</div>
+
+<hr>
+<p style="color:#888; font-size:12px; margin-top:40px;">Pro Jet Manual — 21/nov/2026 — Steve, CDMX</p>
+</body>
+</html>

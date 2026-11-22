@@ -1,0 +1,8 @@
+[09:38:56] Oido: invetiga en github templates de web scraping y treate los 5 mas efectivos. quiero construir uno para sacar posibles clientes para venderles un scanner de barra de codigos y QR´s que puede escanear cualquiere producto de cualquier pais 
+[09:38:56] TOOL: buscar_web({"query":"GitHub web scraping template popular repository"})
+[09:38:56] ERROR: __main__.buscar_web() argument after ** must be a mapping, not str
+[09:38:56] VOZ: Hubo un error.
+[09:39:23] Oido: que sucedio?
+[09:39:24] TOOL: buscar_web({"query":"GitHub web scraping template repository"})
+[09:39:24] ERROR: __main__.buscar_web() argument after ** must be a mapping, not str
+[09:39:24] VOZ: Hubo un error.
